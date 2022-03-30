@@ -19,6 +19,5 @@ with Flow("Test") as flow:
     output_value(value)
 
 flow.run_config = KubernetesRun()
-flow.executor = DaskExecutor("10.2.36.44:8786")
 flow.storage = GitHub(repo='lambertsbennett/prefect-test', path='test-flow.py')
 
