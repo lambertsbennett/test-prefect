@@ -1,23 +1,26 @@
-from prefect import Flow, task
-from prefect.storage import GitHub
+from prefect import task, Flow
+from prefect.executors import DaskExecutor 
 from prefect.run_configs import KubernetesRun
+from prefect.storage import GitHub
 
 
-FLOW_NAME = "github_kubernetes_run"
-STORAGE = GitHub(
-    repo="anna-geller/packaging-prefect-flows",
-    path=f"flows/{FLOW_NAME}.py",
-)
+@task
+def get_value():
+    return "Example!"
 
 
-@task(log_stdout=True)
-def hello_world():
-    text = f"hello from {FLOW_NAME}"
-    print(text)
-    return text
+@task
+def output_value(value):
+    print(value)
 
 
-with Flow(
-    FLOW_NAME, storage=STORAGE, run_config=KubernetesRun(labels=[],),
-) as flow:
-    hw = hello_world()
+with Flow("Test") as flow:
+    value = get_value()
+    output_value(value)
+
+flow.run_config = KubernetesRun()
+flow.executor = DaskExecutor("10.2.36.44:8786")
+flow.storage = GitHub(repo='lambertsbennett/prefect-test', path='test-flow.py')
+flow.storage.build()
+
+flow.register(project_name='test')
